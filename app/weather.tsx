@@ -24,6 +24,8 @@ export default function WeatherTable({ data }: {
   const elemsize = "px-6 py-6"
   return (
     <div className="overflow-x-auto text-xl">
+      <br/>
+      <h1 className="text-2xl font-bold text-center">Elsbethen</h1>
       <table className="min-w-full table-auto p-2">
         <thead>
           <tr>

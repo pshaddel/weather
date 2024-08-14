@@ -81,9 +81,9 @@ export async function Board() {
 }
  */
 async function getWeather(): Promise<WeatherResponse> {
-    // https://www.google.com/maps/@47.7802926,13.0545452,14z?entry=ttu
-    const longitude = 13.41;
-    const latitude = 52.52;
+    // https://www.google.com/maps/place/47%C2%B046'03.0%22N+13%C2%B005'13.1%22E/@47.767505,13.0843931,17z/data=!3m1!4b1!4m4!3m3!8m2!3d47.767505!4d13.086968?entry=ttu
+    const longitude = 13.086968;
+    const latitude = 47.767505;
     // const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`)
     const urlParams = new URLSearchParams({
         latitude: latitude.toString(),
