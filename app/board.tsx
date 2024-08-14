@@ -89,7 +89,7 @@ async function getWeather(): Promise<WeatherResponse> {
         latitude: latitude.toString(),
         longitude: longitude.toString(),
         current: "temperature_2m,wind_speed_10m",
-        hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain",
+        hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain,showers",
         forecast_days: "7",
         timezone: "Europe/Berlin"
     })
@@ -99,7 +99,7 @@ async function getWeather(): Promise<WeatherResponse> {
     const data = await response.json();
     // format weather based on the data:
     // date, temperature, humidity, wind speed, rain
-
+    console.log(data);
     return data
 }
 
@@ -159,7 +159,9 @@ function formatWeather(data: WeatherResponse): WeatherData {
     }
   });
   // remove data of the past
+  // Europe/Berlin timezone
   const now = new Date();
+  now.setHours(now.getHours() + 2);
   const nowIndex = weatherData.findIndex((data) => new Date(data.date) > now);
   weatherData = weatherData.slice(nowIndex);
   // keep only next 10 hours
