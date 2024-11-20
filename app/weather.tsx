@@ -29,7 +29,7 @@ export default function WeatherTable({ data }: {
       <table className="min-w-full table-auto p-2">
         <thead>
           <tr>
-            <th className={`${elemsize} min-w-50`}>Date</th>
+            <th className={`${elemsize} min-w-50`}>Time</th>
             <th className={`${elemsize} text-justify`}>Temp(°C)</th>
             <th className={`${elemsize} text-darkblue-500`}>Humidity(%)</th>
             <th className={`${elemsize} text-gray-400`}>Wind(km/h)</th>
