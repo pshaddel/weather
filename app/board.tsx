@@ -3,9 +3,9 @@ import { parse } from 'node-html-parser';
 import WeatherTable from "./weather";
 
 export async function Board() {
-    const weather = await getWeather()
+  const weather = await getWeather()
 
-    return <WeatherTable data={formatWeather(weather)} />
+  return <WeatherTable data={formatWeather(weather)} />
 }
 
 /**
@@ -81,26 +81,26 @@ export async function Board() {
 }
  */
 async function getWeather(): Promise<WeatherResponse> {
-    // https://www.google.com/maps/place/47%C2%B046'03.0%22N+13%C2%B005'13.1%22E/@47.767505,13.0843931,17z/data=!3m1!4b1!4m4!3m3!8m2!3d47.767505!4d13.086968?entry=ttu
-    const longitude = 13.086968;
-    const latitude = 47.767505;
-    // const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`)
-    const urlParams = new URLSearchParams({
-        latitude: latitude.toString(),
-        longitude: longitude.toString(),
-        current: "temperature_2m,wind_speed_10m",
-        hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain,showers",
-        forecast_days: "7",
-        timezone: "Europe/Berlin"
-    })
-    const response = await fetch(`https://api.open-meteo.com/v1/forecast?${urlParams.toString()}`, {
-      next: { revalidate: 55, tags: ["weather"] }
-    })
-    const data = await response.json();
-    // format weather based on the data:
-    // date, temperature, humidity, wind speed, rain
-    console.log(data);
-    return data
+  // https://www.google.com/maps/place/47%C2%B046'03.0%22N+13%C2%B005'13.1%22E/@47.767505,13.0843931,17z/data=!3m1!4b1!4m4!3m3!8m2!3d47.767505!4d13.086968?entry=ttu
+  const longitude = 13.086968;
+  const latitude = 47.767505;
+  // const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`)
+  const urlParams = new URLSearchParams({
+    latitude: latitude.toString(),
+    longitude: longitude.toString(),
+    current: "temperature_2m,wind_speed_10m",
+    hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain,showers,is_day",
+    forecast_days: "7",
+    timezone: "Europe/Berlin"
+  })
+  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${urlParams.toString()}`, {
+    next: { revalidate: 55, tags: ["weather"] }
+  })
+  const data = await response.json();
+  // format weather based on the data:
+  // date, temperature, humidity, wind speed, rain
+  console.log(data);
+  return data
 }
 
 type WeatherResponse = {
@@ -112,30 +112,35 @@ type WeatherResponse = {
   timezone_abbreviation: string,
   elevation: number,
   current_units: {
-      time: string,
-      interval: string,
-      temperature_2m: string,
-      wind_speed_10m: string
+    time: string,
+    interval: string,
+    temperature_2m: string,
+    wind_speed_10m: string
   },
   current: {
-      time: string,
-      interval: number,
-      temperature_2m: number,
-      wind_speed_10m: number
+    time: string,
+    interval: number,
+    temperature_2m: number,
+    wind_speed_10m: number,
+    rain: number,
+    showers: number,
+    is_day: number
   },
   hourly_units: {
-      time: string,
-      temperature_2m: string,
-      relative_humidity_2m: string,
-      wind_speed_10m: string,
-      rain: string
+    time: string,
+    temperature_2m: string,
+    relative_humidity_2m: string,
+    wind_speed_10m: string,
+    rain: string
   },
   hourly: {
-      time: string[],
-      temperature_2m: number[],
-      relative_humidity_2m: number[],
-      wind_speed_10m: number[],
-      rain: number[]
+    time: string[],
+    temperature_2m: number[],
+    relative_humidity_2m: number[],
+    wind_speed_10m: number[],
+    rain: number[],
+    showers: number[],
+    is_day: number[]
   }
 }
 
@@ -155,7 +160,7 @@ function formatWeather(data: WeatherResponse): WeatherData {
       temperature: hourlyData.temperature_2m[index],
       humidity: hourlyData.relative_humidity_2m[index],
       windSpeed: hourlyData.wind_speed_10m[index],
-      rain: hourlyData.rain[index]
+      rain: (hourlyData.rain[index] || 0) + (hourlyData.showers[index] || 0)
     }
   });
   // remove data of the past

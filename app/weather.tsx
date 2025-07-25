@@ -3,18 +3,9 @@
 import React, { useEffect } from "react";
 import { WeatherData } from "./board";
 
-// export type WeatherData = {
-//   date: string,
-//   temperature: number,
-//   humidity: number,
-//   windSpeed: number,
-//   rain: number
-// }[]
-
 export default function WeatherTable({ data }: {
     data: WeatherData
 }) {
-  console.log(data);
   useEffect(() => {
     setTimeout(function() {
       console.log("Reloading page...");
