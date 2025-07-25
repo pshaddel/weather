@@ -21,16 +21,18 @@ export default function WeatherTable({ data }: {
         <thead>
           <tr>
             <th className={`${elemsize} min-w-50`}>Time</th>
-            <th className={`${elemsize} text-justify`}>Temp(°C)</th>
-            <th className={`${elemsize} text-darkblue-500`}>Humidity(%)</th>
-            <th className={`${elemsize} text-gray-400`}>Wind(km/h)</th>
-            <th className={`${elemsize} text-blue-500`}>Rain (mm)</th>
+            <th className={`${elemsize} text-justify`}>Weather</th>
+            <th className={`${elemsize} text-justify`}>Temp<br />(°C)</th>
+            <th className={`${elemsize} text-darkblue-500`}>Hum<br />(%)</th>
+            <th className={`${elemsize} text-gray-400`}>Wind<br />(km/h)</th>
+            <th className={`${elemsize} text-blue-500`}>Rain<br />(mm)</th>
           </tr>
         </thead>
         <tbody>
           {data.map((row, index) => (
             <tr key={index}>
               <td className={`border ${elemsize} text-right`}>{row.date}</td>
+              <td className={`border ${elemsize} text-center`}>{row.weatherIcon}</td>
               <td className={`border ${elemsize} ${temperatureColor(row.temperature)}`}>{row.temperature}</td>
               <td className={`border ${elemsize} text-darkblue-500 font-bold`}>{row.humidity}</td>
               <td className={`border ${elemsize} text-gray-400 font-bold`}>{row.windSpeed}</td>
@@ -43,16 +45,16 @@ export default function WeatherTable({ data }: {
   );
 }
 
-function temperatureColor(temperature: number) {
-  if (temperature < 0) {
-    return "text-blue-500";
-  } else if (temperature < 10) {
-    return "text-blue-400";
-  } else if (temperature < 20) {
-    return "text-green-500";
-  } else if (temperature < 30) {
-    return "text-yellow-500";
-  } else {
-    return "text-red-500";
-  }
-};
+const temperatureLevels = [
+  { maxTemp: 0, color: "text-purple-600" },
+  { maxTemp: 10, color: "text-blue-500" },
+  { maxTemp: 20, color: "text-cyan-500" },
+  { maxTemp: 25, color: "text-green-500" },
+  { maxTemp: 30, color: "text-yellow-500" },
+  { maxTemp: 35, color: "text-orange-500" },
+];
+
+function temperatureColor(temperature: number): string {
+  const level = temperatureLevels.find(l => temperature < l.maxTemp);
+  return level ? level.color : "text-red-600"; // Default for temps >= 35
+}

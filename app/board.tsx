@@ -89,7 +89,7 @@ async function getWeather(): Promise<WeatherResponse> {
     latitude: latitude.toString(),
     longitude: longitude.toString(),
     current: "temperature_2m,wind_speed_10m",
-    hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain,showers,is_day",
+    hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m,rain,showers,is_day,weather_code",
     forecast_days: "7",
     timezone: "Europe/Berlin"
   })
@@ -140,7 +140,8 @@ type WeatherResponse = {
     wind_speed_10m: number[],
     rain: number[],
     showers: number[],
-    is_day: number[]
+    is_day: number[],
+    weather_code: number[]
   }
 }
 
@@ -149,8 +150,22 @@ export type WeatherData = {
   temperature: number,
   humidity: number,
   windSpeed: number,
-  rain: number
+  rain: number,
+  weatherIcon?: string, // optional, can be used to show an icon based on the weather
 }[]
+
+function getWeatherIconFromCode(code: number): string {
+  if (code === 0) return "☀️"; // Clear sky
+  if (code >= 1 && code <= 3) return "☁️"; // Mainly clear, partly cloudy, and overcast
+  if (code === 45 || code === 48) return "🌫️"; // Fog
+  if (code >= 51 && code <= 57) return "🌧️"; // Drizzle
+  if (code >= 61 && code <= 67) return "🌧️"; // Rain
+  if (code >= 71 && code <= 77) return "❄️"; // Snow
+  if (code >= 80 && code <= 82) return "🌦️"; // Rain showers
+  if (code === 85 || code === 86) return "🌨️"; // Snow showers
+  if (code >= 95) return "⛈️"; // Thunderstorm
+  return "🤷";
+}
 
 function formatWeather(data: WeatherResponse): WeatherData {
   const hourlyData = data.hourly;
@@ -160,7 +175,8 @@ function formatWeather(data: WeatherResponse): WeatherData {
       temperature: hourlyData.temperature_2m[index],
       humidity: hourlyData.relative_humidity_2m[index],
       windSpeed: hourlyData.wind_speed_10m[index],
-      rain: (hourlyData.rain[index] || 0) + (hourlyData.showers[index] || 0)
+      rain: (hourlyData.rain[index] || 0) + (hourlyData.showers[index] || 0),
+      weatherIcon: getWeatherIconFromCode(hourlyData.weather_code[index])
     }
   });
   // remove data of the past
