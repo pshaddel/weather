@@ -3,14 +3,41 @@
 import React, { useEffect } from "react";
 import { WeatherData } from "./board";
 
+export async function doYouHaveInternetConnection(): Promise<boolean> {
+  console.log("Checking internet connection in doYouHaveInternetConnection");
+  try {
+    const response = await fetch("https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.41&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m", {
+      method: "GET",
+      cache: "no-cache",
+    });
+    return response.ok;
+  } catch (error) {
+    console.error("No internet connection:", error);
+    return false;
+  }
+};
+
+const RELOAD_INTERVAL = 5 * 60 * 1000; // 5 minutes
 export default function WeatherTable({ data }: {
     data: WeatherData
 }) {
   useEffect(() => {
-    setTimeout(function() {
-      console.log("Reloading page...");
-      window.location.reload();
-    }, 60000);
+    const timeoutId = setInterval(function () {
+      console.log("Checking internet connection...");
+      doYouHaveInternetConnection().then(hasConnection => {
+        console.log("Internet connection status:", hasConnection);
+        if (hasConnection) {
+          window.location.reload();
+          console.log("Reloading page...");
+        } else {
+          console.log("No internet connection");
+        }
+      }).catch(error => {
+        console.error("Error checking internet connection:", error);
+      });
+    }, RELOAD_INTERVAL);
+
+    return () => clearTimeout(timeoutId);
   }, []);
   const elemsize = "px-6 py-6"
   return (

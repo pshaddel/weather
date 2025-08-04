@@ -181,8 +181,9 @@ function formatWeather(data: WeatherResponse): WeatherData {
   });
   // remove data of the past
   // Europe/Berlin timezone
+
   const now = new Date();
-  now.setHours(now.getHours() + 2);
+  now.setHours(now.getHours() - 1);
   const nowIndex = weatherData.findIndex((data) => new Date(data.date) > now);
   weatherData = weatherData.slice(nowIndex);
   // keep only next 10 hours
