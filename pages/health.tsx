@@ -93,6 +93,9 @@ export default function HealthPage({ data, lastUpdated, error }: InferGetStaticP
             const now = new Date();
             const diffInSeconds = Math.floor((now.getTime() - lastUpdatedDate.getTime()) / 1000);
             const minutes = Math.floor(diffInSeconds / 60);
+            if (minutes > 5) {
+                window.location.reload();
+            }
             const seconds = diffInSeconds % 60;
             if (minutes > 0) {
                 setTimeAgo(`${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds > 1 ? 's' : ''} ago`);
