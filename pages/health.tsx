@@ -3,7 +3,7 @@ import { GetStaticProps, InferGetStaticPropsType } from "next";
 import { useEffect, useState } from "react";
 
 const PAGE_RELOAD_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
-const CACHE_REVALIDATE_TIME = 5 * 60; // 5 minutes in seconds
+const CACHE_REVALIDATE_TIME = 4 * 60; // 5 minutes in seconds
 
 export const getStaticProps = (async () => {
     try {
@@ -68,21 +68,22 @@ export default function HealthPage({ data, lastUpdated, error }: InferGetStaticP
     // }, []);
 
     // Internet connection check (optional - for additional reliability)
-    useEffect(() => {
-        const timeoutId = setInterval(function () {
-            console.log("Checking internet connection...");
-            doYouHaveInternetConnection().then(hasConnection => {
-                console.log("Internet connection status:", hasConnection);
-                if (!hasConnection) {
-                    console.log("No internet connection");
-                } else {
-                    console.log("Internet connection is available");
-                    window.location.reload();
-                }
-            }).catch(error => {
-                console.error("Error checking internet connection:", error);
-            });
-        }, 5 * 60000); // Check every minute
+    // useEffect(() => {
+    //     const timeoutId = setInterval(function () {
+    //         console.log('inside interval...')
+    //         console.log("Checking internet connection...");
+    //         doYouHaveInternetConnection().then(hasConnection => {
+    //             console.log("Internet connection status:", hasConnection);
+    //             if (!hasConnection) {
+    //                 console.log("No internet connection");
+    //             } else {
+    //                 console.log("Internet connection is available");
+    //                 window.location.reload();
+    //             }
+    //         }).catch(error => {
+    //             console.error("Error checking internet connection:", error);
+    //         });
+    //     }, 3000); // Check every minute
 
         return () => clearTimeout(timeoutId);
     }, []);
