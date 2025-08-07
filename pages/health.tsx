@@ -94,8 +94,11 @@ export default function HealthPage({ data, lastUpdated, error }: InferGetStaticP
             const now = new Date();
             const diffInSeconds = Math.floor((now.getTime() - lastUpdatedDate.getTime()) / 1000);
             const minutes = Math.floor(diffInSeconds / 60);
+            console.log('diffInSeconds:', diffInSeconds, 'minutes:', minutes);
             if (minutes > 5) {
-                window.location.reload();
+                console.log("Reloading page due to timeout...");
+                window.location.reload(); // does not work
+
             }
             const seconds = diffInSeconds % 60;
             if (minutes > 0) {
