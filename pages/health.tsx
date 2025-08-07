@@ -43,7 +43,7 @@ export default function HealthPage({ data }: InferGetServerSidePropsType<typeof 
     return (
 
         <div className="w-screen h-screen p-4">
-            <h1 className="text-3xl font-bold text-center mb-8">Services Health Dashboard</h1>
+            <h1 className="text-3xl font-bold text-center mb-8">Digital Poster Services Health</h1>
             <div className="overflow-x-auto shadow-md sm:rounded-lg">
                 <table className="min-w-full text-left text-lg">
                     <thead className="bg-gray-100 text-gray-700 uppercase">
