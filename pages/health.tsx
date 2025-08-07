@@ -1,14 +1,17 @@
 import { doYouHaveInternetConnection } from "@/app/weather";
-import { GetServerSideProps, GetStaticProps, InferGetServerSidePropsType } from "next";
-import { useRouter } from "next/router";
+import { GetStaticProps, GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { useEffect, useState } from "react";
 
-
-export const getStaticProps = (async () => {
+const PAGE_RELOAD_INTERVAL = 4 * 60 * 1000; // 4 minutes in milliseconds
+const CACHE_REVALIDATE_TIME = 5 * 60; // 5 minutes in seconds
+export const getServerSideProps = (async () => {
     const response  = await fetch("https://n8n.dev.dcs.redbull.com/webhook/aa6746bd-5e8e-4a75-bbbd-fb150e758360", {
         method: "POST",
         headers: {
             "x-api-key": process.env.N8N_VIDERI_HEALTH_API_KEY || ""
+        },
+        next: {
+            revalidate: CACHE_REVALIDATE_TIME
         }
     });
     if (!response.ok) {
@@ -19,11 +22,9 @@ export const getStaticProps = (async () => {
         props: {
             data: data as HealthData,
             lastUpdated: new Date().toISOString()
-        },
-        // Re-generate the page at most once every 5 minutes
-        revalidate: 300, // In seconds
+        }
     };
-}) satisfies GetStaticProps<{ data: HealthData }>;
+}) satisfies GetServerSideProps<{ data: HealthData }>;
 
 const StatusIndicator = ({ healthy }: { healthy: boolean }) => (
     <div className="flex items-center justify-center">
@@ -31,9 +32,7 @@ const StatusIndicator = ({ healthy }: { healthy: boolean }) => (
     </div>
 );
 
-const RELOAD_INTERVAL = 5 * 60 * 1000; // 5 minutes
-
-export default function HealthPage({ data, lastUpdated }: InferGetServerSidePropsType<typeof getStaticProps>) {
+export default function HealthPage({ data, lastUpdated }: InferGetServerSidePropsType<typeof getServerSideProps>) {
 
     const [timeAgo, setTimeAgo] = useState("");
 
@@ -51,7 +50,7 @@ export default function HealthPage({ data, lastUpdated }: InferGetServerSideProp
             }).catch(error => {
                 console.error("Error checking internet connection:", error);
             });
-        }, RELOAD_INTERVAL);
+        }, PAGE_RELOAD_INTERVAL);
 
         return () => clearTimeout(timeoutId);
     }, []);
