@@ -1,6 +1,7 @@
+import { doYouHaveInternetConnection } from "@/app/weather";
 import { GetServerSideProps, GetStaticProps, InferGetServerSidePropsType } from "next";
 import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 
 export const getStaticProps = (async () => {
@@ -17,6 +18,7 @@ export const getStaticProps = (async () => {
     return {
         props: {
             data: data as HealthData,
+            lastUpdated: new Date().toISOString()
         },
         // Re-generate the page at most once every 5 minutes
         revalidate: 300, // In seconds
@@ -29,16 +31,49 @@ const StatusIndicator = ({ healthy }: { healthy: boolean }) => (
     </div>
 );
 
-export default function HealthPage({ data }: InferGetServerSidePropsType<typeof getStaticProps>) {
-    const router = useRouter();
+const RELOAD_INTERVAL = 5 * 60 * 1000; // 5 minutes
+
+export default function HealthPage({ data, lastUpdated }: InferGetServerSidePropsType<typeof getStaticProps>) {
+
+    const [timeAgo, setTimeAgo] = useState("");
 
     useEffect(() => {
-        const interval = setInterval(() => {
-            router.replace(router.asPath);
-        }, 300000); // 300000 ms = 5 minutes
+        const timeoutId = setInterval(function () {
+            console.log("Checking internet connection...");
+            doYouHaveInternetConnection().then(hasConnection => {
+                console.log("Internet connection status:", hasConnection);
+                if (hasConnection) {
+                    window.location.reload();
+                    console.log("Reloading page...");
+                } else {
+                    console.log("No internet connection");
+                }
+            }).catch(error => {
+                console.error("Error checking internet connection:", error);
+            });
+        }, RELOAD_INTERVAL);
 
+        return () => clearTimeout(timeoutId);
+    }, []);
+
+    useEffect(() => {
+        const lastUpdatedDate = new Date(lastUpdated);
+        const interval = setInterval(() => {
+            const now = new Date();
+            const diffInSeconds = Math.floor((now.getTime() - lastUpdatedDate.getTime()) / 1000);
+            const minutes = Math.floor(diffInSeconds / 60);
+            const seconds = diffInSeconds % 60;
+            if (minutes > 0) {
+                setTimeAgo(`${minutes} minute${minutes > 1 ? 's' : ''} ago`);
+            } else if (seconds > 0) {
+                setTimeAgo(`${seconds} second${seconds > 1 ? 's' : ''} ago`);
+            } else {
+                setTimeAgo("just now");
+            }
+        }, 1000); // Update every second
         return () => clearInterval(interval);
-    }, [router]);
+    }, []);
+
     const elemsize = "px-6 py-4";
     return (
 
@@ -69,6 +104,9 @@ export default function HealthPage({ data }: InferGetServerSidePropsType<typeof 
                         ))}
                     </tbody>
                 </table>
+                <div className="mt-4 text-center text-gray-500">
+                    <p>Time past from last update: {timeAgo}</p>
+                </div>
             </div>
         </div>
     );
