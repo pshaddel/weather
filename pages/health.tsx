@@ -64,7 +64,7 @@ export default function HealthPage({ data, lastUpdated }: InferGetServerSideProp
             const minutes = Math.floor(diffInSeconds / 60);
             const seconds = diffInSeconds % 60;
             if (minutes > 0) {
-                setTimeAgo(`${minutes} minute${minutes > 1 ? 's' : ''} ago`);
+                setTimeAgo(`${minutes} minute${minutes > 1 ? 's' : ''} and ${seconds} second${seconds > 1 ? 's' : ''} ago`);
             } else if (seconds > 0) {
                 setTimeAgo(`${seconds} second${seconds > 1 ? 's' : ''} ago`);
             } else {
