@@ -85,8 +85,8 @@ export default function HealthPage({ data, lastUpdated, error }: InferGetStaticP
     //         });
     //     }, 3000); // Check every minute
 
-        return () => clearTimeout(timeoutId);
-    }, []);
+    //     return () => clearTimeout(timeoutId);
+    // }, []);
 
     useEffect(() => {
         const lastUpdatedDate = new Date(lastUpdated);
