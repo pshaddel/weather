@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "next": "14.2.35",
+    "hls.js": "^1.6.15",
+    "next": "14.2.5",
     "node-html-parser": "^6.1.13",
     "react": "^18",
     "react-dom": "^18"
