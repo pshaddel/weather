@@ -18,8 +18,10 @@ export async function doYouHaveInternetConnection(): Promise<boolean> {
 };
 
 const RELOAD_INTERVAL = 5 * 60 * 1000; // 5 minutes
-export default function WeatherTable({ data }: {
-    data: WeatherData
+
+export default function WeatherTable({ data, cityName = "Elsbethen" }: {
+  data: WeatherData,
+  cityName?: string
 }) {
   useEffect(() => {
     const timeoutId = setInterval(function () {
@@ -37,13 +39,13 @@ export default function WeatherTable({ data }: {
       });
     }, RELOAD_INTERVAL);
 
-    return () => clearTimeout(timeoutId);
+    return () => clearInterval(timeoutId);
   }, []);
   const elemsize = "px-6 py-6"
   return (
     <div className="overflow-x-auto text-xl">
       <br/>
-      <h1 className="text-2xl font-bold text-center">Elsbethen</h1>
+      <h1 className="text-2xl font-bold text-center">{cityName}</h1>
       <table className="min-w-full table-auto p-2">
         <thead>
           <tr>

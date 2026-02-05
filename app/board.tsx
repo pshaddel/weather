@@ -1,11 +1,21 @@
-import Image from "next/image";
-import { parse } from 'node-html-parser';
 import WeatherTable from "./weather";
 
-export async function Board() {
-  const weather = await getWeather()
+type BoardProps = {
+  searchParams?: {
+    latitude?: string;
+    longitude?: string;
+    lat?: string;
+    lon?: string;
+    city?: string;
+  };
+};
 
-  return <WeatherTable data={formatWeather(weather)} />
+export async function Board({ searchParams }: BoardProps) {
+  const { latitude, longitude } = getCoordinates(searchParams);
+  const cityName = getCityName(searchParams);
+  const weather = await getWeather(latitude, longitude)
+
+  return <WeatherTable data={formatWeather(weather)} cityName={cityName} />
 }
 
 /**
@@ -80,11 +90,10 @@ export async function Board() {
   }
 }
  */
-async function getWeather(): Promise<WeatherResponse> {
+async function getWeather(latitude: number, longitude: number): Promise<WeatherResponse> {
   // https://www.google.com/maps/place/47%C2%B046'03.0%22N+13%C2%B005'13.1%22E/@47.767505,13.0843931,17z/data=!3m1!4b1!4m4!3m3!8m2!3d47.767505!4d13.086968?entry=ttu
-  const longitude = 13.086968;
-  const latitude = 47.767505;
   // const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,wind_speed_10m&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m`)
+  console.log("Fetching weather for coordinates:", { latitude, longitude });
   const urlParams = new URLSearchParams({
     latitude: latitude.toString(),
     longitude: longitude.toString(),
@@ -99,8 +108,38 @@ async function getWeather(): Promise<WeatherResponse> {
   const data = await response.json();
   // format weather based on the data:
   // date, temperature, humidity, wind speed, rain
-  console.log(data);
+  // console.log(data);
   return data
+}
+
+const DEFAULT_COORDS = {
+  latitude: 47.767505,
+  longitude: 13.086968
+};
+
+function parseCoordinate(value?: string): number | null {
+  if (!value) return null;
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return null;
+  return parsed;
+}
+
+function getCoordinates(searchParams?: BoardProps["searchParams"]): {
+  latitude: number;
+  longitude: number;
+} {
+  const latitude = parseCoordinate(searchParams?.latitude ?? searchParams?.lat) ?? DEFAULT_COORDS.latitude;
+  const longitude = parseCoordinate(searchParams?.longitude ?? searchParams?.lon) ?? DEFAULT_COORDS.longitude;
+  console.log("Using coordinates:", { latitude, longitude });
+  return { latitude, longitude };
+}
+
+const DEFAULT_CITY = "Elsbethen";
+
+function getCityName(searchParams?: BoardProps["searchParams"]): string {
+  const city = searchParams?.city?.trim();
+  if (!city) return DEFAULT_CITY;
+  return city;
 }
 
 type WeatherResponse = {

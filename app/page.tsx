@@ -1,8 +1,18 @@
 import Image from "next/image";
 import { Board } from "./board";
 
-export default function Home() {
+type HomeProps = {
+  searchParams?: {
+    latitude?: string;
+    longitude?: string;
+    lat?: string;
+    lon?: string;
+    city?: string;
+  };
+};
+
+export default function Home({ searchParams }: HomeProps) {
   return (
-    <Board />
+    <Board searchParams={searchParams} />
   );
 }
