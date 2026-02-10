@@ -509,7 +509,11 @@ export default function OlympicBoard({ medalTable }: OlympicBoardProps) {
                 ) : (
                   <tr
                     key={`${row.country}-${row.rank}`}
-                    className={row.country === "Red Bull Athletes" ? "ring-2 ring-yellow-500" : undefined}
+                      className={
+                        row.country === "Red Bull Athletes"
+                          ? "ring-2 ring-yellow-500 bg-gradient-to-r from-yellow-100/70 via-white/60 to-yellow-100/70"
+                          : undefined
+                      }
                   >
                     <td className={`border ${cellSize} text-center`}>{row.rank}</td>
                     <td className={`border ${cellSize}`}>
