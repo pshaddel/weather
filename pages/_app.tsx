@@ -1,9 +1,19 @@
 import '../app/globals.css';
 import type { AppProps } from 'next/app';
+import type { ReactElement, ReactNode } from 'react';
 import Image from 'next/image';
 
-function MyApp({ Component, pageProps }: AppProps) {
-    return <Frame><Component {...pageProps} /></Frame>;
+type NextPageWithLayout = AppProps['Component'] & {
+    getLayout?: (page: ReactElement) => ReactNode;
+};
+
+type AppPropsWithLayout = AppProps & {
+    Component: NextPageWithLayout;
+};
+
+function MyApp({ Component, pageProps }: AppPropsWithLayout) {
+    const getLayout = Component.getLayout ?? ((page) => <Frame>{page}</Frame>);
+    return getLayout(<Component {...pageProps} />);
 }
 
 export default MyApp;
