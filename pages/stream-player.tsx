@@ -19,6 +19,10 @@ export default function Stream() {
 
     // Get URL from query parameters
     const url = (router.query.url as string) || 'https://freqsyndlin.redbull.com/582/hls/master/playlist.m3u8';
+    const qualityParam = Array.isArray(router.query.quality)
+        ? router.query.quality[0]
+        : router.query.quality;
+    const requestedQuality = Number(qualityParam);
 
     const calculateBackoff = (retryCount: number): number => {
         // Exponential backoff with jitter
@@ -65,6 +69,30 @@ export default function Stream() {
 
             hls.on(Hls.Events.MANIFEST_PARSED, () => {
                 console.log('Stream manifest parsed successfully');
+                if (Number.isFinite(requestedQuality) && requestedQuality > 0 && hls.levels.length > 0) {
+                    const nearestLevel = hls.levels.reduce(
+                        (nearest, level, index) => {
+                            const levelQuality = level.height || Math.round(level.bitrate / 1000);
+                            const difference = Math.abs(levelQuality - requestedQuality);
+
+                            if (difference < nearest.difference) {
+                                return { index, difference, quality: levelQuality };
+                            }
+
+                            return nearest;
+                        },
+                        {
+                            index: 0,
+                            difference: Number.POSITIVE_INFINITY,
+                            quality: hls.levels[0].height || Math.round(hls.levels[0].bitrate / 1000),
+                        }
+                    );
+
+                    hls.autoLevelCapping = nearestLevel.index;
+                    console.log(
+                        `Quality cap requested: ${requestedQuality}. Nearest available: ${nearestLevel.quality} (level ${nearestLevel.index}).`
+                    );
+                }
                 // Reset retry count on successful connection
                 retryCountRef.current = 0;
                 video.play().catch((err) => {
@@ -159,7 +187,7 @@ export default function Stream() {
                 clearTimeout(retryTimeoutRef.current);
             }
         };
-    }, [router.isReady, url]);
+    }, [router.isReady, url, requestedQuality]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
