@@ -6,6 +6,7 @@ import Hls from "hls.js";
 const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 const MAX_RETRY_DELAY = 60000; // 60 seconds
 const MAX_RETRIES = 10;
+const OFFLINE_ERROR_MESSAGE = 'Offline - waiting for connection...';
 
 export default function Stream() {
     const router = useRouter();
@@ -14,6 +15,7 @@ export default function Stream() {
     const retryCountRef = useRef(0);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [isOffline, setIsOffline] = useState(false);
 
     // Get URL from query parameters
     const url = (router.query.url as string) || 'https://freqsyndlin.redbull.com/582/hls/master/playlist.m3u8';
@@ -75,6 +77,7 @@ export default function Stream() {
                 console.error('HLS Error:', data);
 
                 if (data.fatal) {
+                    console.log('fatal', data);
                     switch (data.type) {
                         case Hls.ErrorTypes.NETWORK_ERROR:
                             console.error('Fatal network error encountered, trying to recover...');
@@ -85,6 +88,11 @@ export default function Stream() {
                                 if (video.paused || video.readyState === 0) {
                                     console.error('Recovery failed, scheduling page reload');
                                     reloadPage();
+                                } else {
+                                    console.log('Network recovery successful');
+                                    if (navigator.onLine) {
+                                        setError(null);
+                                    }
                                 }
                             }, 5000);
                             break;
@@ -97,6 +105,11 @@ export default function Stream() {
                                 if (video.paused || video.readyState === 0) {
                                     console.error('Recovery failed, scheduling page reload');
                                     reloadPage();
+                                } else {
+                                    console.log('Media recovery successful');
+                                    if (navigator.onLine) {
+                                        setError(null);
+                                    }
                                 }
                             }, 5000);
                             break;
@@ -148,6 +161,31 @@ export default function Stream() {
         };
     }, [router.isReady, url]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const syncOnlineStatus = () => {
+            const offline = !navigator.onLine;
+            setIsOffline(offline);
+            if (offline) {
+                setError(OFFLINE_ERROR_MESSAGE);
+            } else {
+                setError((previousError) =>
+                    previousError === OFFLINE_ERROR_MESSAGE ? null : previousError
+                );
+            }
+        };
+
+        syncOnlineStatus();
+        window.addEventListener('online', syncOnlineStatus);
+        window.addEventListener('offline', syncOnlineStatus);
+
+        return () => {
+            window.removeEventListener('online', syncOnlineStatus);
+            window.removeEventListener('offline', syncOnlineStatus);
+        };
+    }, []);
+
     // Monitor video stalling
     useEffect(() => {
         const video = videoRef.current;
@@ -165,7 +203,9 @@ export default function Stream() {
 
         const handlePlaying = () => {
             console.log('Video playing');
-            setError(null);
+            if (navigator.onLine) {
+                setError(null);
+            }
             if (stalledTimeout) {
                 clearTimeout(stalledTimeout);
             }
@@ -184,11 +224,13 @@ export default function Stream() {
         };
     }, []);
 
+    const displayError = isOffline ? OFFLINE_ERROR_MESSAGE : error;
+
     return (
         <div className="fixed inset-0 bg-black" style={{ zIndex: 9999 }}>
-            {error && (
-                <div className="absolute top-0 left-0 right-0 p-4 bg-red-900 text-white text-center z-10">
-                    {error}
+            {displayError && (
+                <div className="absolute top-3 left-3 z-10 max-w-xs rounded-md bg-black/75 px-3 py-2 text-xs text-white shadow-sm pointer-events-none">
+                    {displayError}
                 </div>
             )}
             <video
