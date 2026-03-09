@@ -9,6 +9,38 @@ const MAX_RETRIES = 10;
 const OFFLINE_ERROR_MESSAGE = 'Offline - waiting for connection...';
 const FORCE_RELOAD_INTERVAL = 60 * 60 * 1000; // 1 hour
 
+const getYouTubeEmbedUrl = (inputUrl: string): string | null => {
+    try {
+        const parsedUrl = new URL(inputUrl);
+        const host = parsedUrl.hostname.replace(/^www\./, '');
+
+        if (host === 'youtu.be') {
+            const videoId = parsedUrl.pathname.split('/').filter(Boolean)[0];
+            return videoId
+                ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`
+                : null;
+        }
+
+        if (host === 'youtube.com' || host === 'm.youtube.com') {
+            if (parsedUrl.pathname === '/watch') {
+                const videoId = parsedUrl.searchParams.get('v');
+                return videoId
+                    ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`
+                    : null;
+            }
+
+            const liveOrEmbedMatch = parsedUrl.pathname.match(/^\/(live|embed)\/([^/?#]+)/);
+            if (liveOrEmbedMatch?.[2]) {
+                return `https://www.youtube.com/embed/${liveOrEmbedMatch[2]}?autoplay=1&mute=1&playsinline=1&rel=0`;
+            }
+        }
+
+        return null;
+    } catch {
+        return null;
+    }
+};
+
 export default function Stream() {
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -25,6 +57,8 @@ export default function Stream() {
         ? router.query.quality[0]
         : router.query.quality;
     const requestedQuality = Number(qualityParam);
+    const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
+    const isYouTubeSource = Boolean(youtubeEmbedUrl);
 
     const calculateBackoff = (retryCount: number): number => {
         // Exponential backoff with jitter
@@ -193,6 +227,15 @@ export default function Stream() {
         // Wait for router to be ready before initializing
         if (!router.isReady) return;
 
+        if (isYouTubeSource) {
+            setError(null);
+            return () => {
+                if (retryTimeoutRef.current) {
+                    clearTimeout(retryTimeoutRef.current);
+                }
+            };
+        }
+
         initializePlayer();
 
         // Cleanup function
@@ -204,7 +247,7 @@ export default function Stream() {
                 clearTimeout(retryTimeoutRef.current);
             }
         };
-    }, [router.isReady, url, requestedQuality]);
+    }, [router.isReady, url, requestedQuality, isYouTubeSource]);
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -233,6 +276,8 @@ export default function Stream() {
 
     // Monitor video stalling
     useEffect(() => {
+        if (isYouTubeSource) return;
+
         const video = videoRef.current;
         if (!video) return;
 
@@ -267,7 +312,7 @@ export default function Stream() {
                 clearTimeout(stalledTimeout);
             }
         };
-    }, []);
+    }, [isYouTubeSource]);
 
     const displayError = isOffline ? OFFLINE_ERROR_MESSAGE : error;
 
@@ -278,19 +323,34 @@ export default function Stream() {
                     {displayError}
                 </div>
             )}
-            <video
-                ref={videoRef}
-                controls
-                autoPlay
-                muted
-                playsInline
-                className="w-full h-full"
-                style={{
-                    objectFit: 'contain',
-                    width: '100vw',
-                    height: '100vh'
-                }}
-            />
+            {isYouTubeSource && youtubeEmbedUrl ? (
+                <iframe
+                    src={youtubeEmbedUrl}
+                    title="YouTube Stream"
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    className="w-full h-full"
+                    style={{
+                        width: '100vw',
+                        height: '100vh',
+                        border: 0,
+                    }}
+                />
+            ) : (
+                    <video
+                        ref={videoRef}
+                        controls
+                        autoPlay
+                        muted
+                        playsInline
+                        className="w-full h-full"
+                        style={{
+                            objectFit: 'contain',
+                            width: '100vw',
+                            height: '100vh'
+                        }}
+                    />
+            )}
         </div>
     );
 }
