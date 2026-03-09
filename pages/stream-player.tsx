@@ -7,6 +7,7 @@ const INITIAL_RETRY_DELAY = 5000; // 5 seconds
 const MAX_RETRY_DELAY = 60000; // 60 seconds
 const MAX_RETRIES = 10;
 const OFFLINE_ERROR_MESSAGE = 'Offline - waiting for connection...';
+const FORCE_RELOAD_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 export default function Stream() {
     const router = useRouter();
@@ -14,6 +15,7 @@ export default function Stream() {
     const hlsRef = useRef<Hls | null>(null);
     const retryCountRef = useRef(0);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const forceReloadIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [isOffline, setIsOffline] = useState(false);
 
@@ -171,6 +173,21 @@ export default function Stream() {
             setError('HLS playback not supported in this browser');
         }
     };
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        forceReloadIntervalRef.current = setInterval(() => {
+            console.log('Forcing hourly page reload...');
+            window.location.reload();
+        }, FORCE_RELOAD_INTERVAL);
+
+        return () => {
+            if (forceReloadIntervalRef.current) {
+                clearInterval(forceReloadIntervalRef.current);
+            }
+        };
+    }, []);
 
     useEffect(() => {
         // Wait for router to be ready before initializing
