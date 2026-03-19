@@ -57,6 +57,7 @@ export default function Stream() {
         ? router.query.quality[0]
         : router.query.quality;
     const requestedQuality = Number(qualityParam);
+    const isDebug = router.query.debug === 'true';
     const youtubeEmbedUrl = getYouTubeEmbedUrl(url);
     const isYouTubeSource = Boolean(youtubeEmbedUrl);
 
@@ -161,8 +162,16 @@ export default function Stream() {
                             }, 5000);
                             break;
                         case Hls.ErrorTypes.MEDIA_ERROR:
-                            console.error('Fatal media error encountered, trying to recover...');
-                            setError('Media error - attempting recovery...');
+                            console.error('Fatal media error encountered, trying to recover...', data);
+                            try {
+                                setError(
+                                    isDebug
+                                        ? `Media error - attempting recovery... [${data.details}${data.error ? ': ' + data.error.message : ''}]`
+                                        : 'Media error - attempting recovery...'
+                                );
+                            } catch {
+                                setError('Media error - attempting recovery...');
+                            }
                             hls.recoverMediaError();
                             // If recovery fails, schedule page reload
                             setTimeout(() => {
