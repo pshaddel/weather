@@ -17,7 +17,7 @@ const getYouTubeEmbedUrl = (inputUrl: string): string | null => {
         if (host === 'youtu.be') {
             const videoId = parsedUrl.pathname.split('/').filter(Boolean)[0];
             return videoId
-                ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`
+                ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1`
                 : null;
         }
 
@@ -25,13 +25,13 @@ const getYouTubeEmbedUrl = (inputUrl: string): string | null => {
             if (parsedUrl.pathname === '/watch') {
                 const videoId = parsedUrl.searchParams.get('v');
                 return videoId
-                    ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0`
+                    ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1`
                     : null;
             }
 
             const liveOrEmbedMatch = parsedUrl.pathname.match(/^\/(live|embed)\/([^/?#]+)/);
             if (liveOrEmbedMatch?.[2]) {
-                return `https://www.youtube.com/embed/${liveOrEmbedMatch[2]}?autoplay=1&mute=1&playsinline=1&rel=0`;
+                return `https://www.youtube.com/embed/${liveOrEmbedMatch[2]}?autoplay=1&mute=1&playsinline=1&rel=0&enablejsapi=1`;
             }
         }
 
@@ -44,6 +44,7 @@ const getYouTubeEmbedUrl = (inputUrl: string): string | null => {
 export default function Stream() {
     const router = useRouter();
     const videoRef = useRef<HTMLVideoElement>(null);
+    const iframeRef = useRef<HTMLIFrameElement>(null);
     const hlsRef = useRef<Hls | null>(null);
     const retryCountRef = useRef(0);
     const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -334,6 +335,7 @@ export default function Stream() {
             )}
             {isYouTubeSource && youtubeEmbedUrl ? (
                 <iframe
+                    ref={iframeRef}
                     src={youtubeEmbedUrl}
                     title="YouTube Stream"
                     allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -343,6 +345,12 @@ export default function Stream() {
                         width: '100vw',
                         height: '100vh',
                         border: 0,
+                    }}
+                    onLoad={() => {
+                        iframeRef.current?.contentWindow?.postMessage(
+                            '{"event":"command","func":"playVideo","args":""}',
+                            'https://www.youtube.com'
+                        );
                     }}
                 />
             ) : (
